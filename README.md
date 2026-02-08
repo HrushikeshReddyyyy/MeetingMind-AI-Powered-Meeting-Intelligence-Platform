@@ -273,31 +273,45 @@ All **38 tests** cover:
 
 ---
 
-## Deployment Milestones
+## Roadmap
 
-| Phase | Timeline | What Happens |
-|-------|----------|--------------|
-| **Setup & Integration** | Weeks 1-2 | Configure Otter.ai, build Notion templates, connect Zapier workflows |
-| **AI Training & Testing** | Week 3 | Test with 10 real meetings, refine summary quality, tune action item extraction |
-| **Company Rollout** | Week 4 | Deploy to all departments, train 50+ users, activate analytics tracking |
-| **Optimization** | Months 2-3 | Feedback-driven improvements, feature expansion, performance tuning |
+- [x] Core meeting CRUD with transcript upload
+- [x] AI-powered summary generation and action item extraction
+- [x] Otter.ai, Notion, and Zapier integrations
+- [x] Analytics dashboard with engagement scoring
+- [x] Docker containerization
+- [ ] Real-time collaborative meeting notes (WebSocket)
+- [ ] Calendar sync (Google Calendar / Outlook)
+- [ ] Slack & Microsoft Teams bot for instant summaries
+- [ ] Multi-language transcript support
+- [ ] Custom AI prompt templates per team
+- [ ] Role-based access control and team workspaces
+- [ ] PostgreSQL migration for production deployments
+- [ ] Export meetings to PDF / Markdown
 
 ---
 
-## Cost & ROI
+## Contributing
 
-| Item | Cost |
-|------|------|
-| One-time setup | $400 |
-| Monthly | $85 (Otter.ai $20 + Notion $15 + Zapier $20 + AI API $30) |
-| **Break-even** | **Month 2** |
+Contributions are welcome! Here's how to get started:
 
-### Projected Impact
-- **5 hours/week saved** per team on meeting notes and follow-ups
-- **$45,000/year** in recovered IT staff time
-- **100% documentation rate** (up from 30%)
-- **3x faster** action item completion with automated tracking
-- **Searchable archive** of every company decision
+1. **Fork** the repository
+2. **Create** a feature branch: `git checkout -b feature/your-feature`
+3. **Make** your changes and add tests
+4. **Run** tests to make sure everything passes:
+   ```bash
+   cd backend && pytest -v
+   cd frontend && npm test
+   ```
+5. **Commit** with a clear message: `git commit -m "Add your feature"`
+6. **Push** to your fork: `git push origin feature/your-feature`
+7. **Open** a Pull Request
+
+### Guidelines
+- Follow existing code style and project structure
+- Add tests for new API endpoints or services
+- Update the README if you add new features or change configuration
+- Keep PRs focused -- one feature or fix per PR
 
 ---
 
