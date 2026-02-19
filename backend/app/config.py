@@ -1,16 +1,20 @@
+import secrets
+from pathlib import Path
 from pydantic_settings import BaseSettings
 from typing import Optional
+
+BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 class Settings(BaseSettings):
     # Application
     app_name: str = "MeetingMind"
     debug: bool = False
-    secret_key: str = "change-this-to-a-random-secret-key"
+    secret_key: str = secrets.token_urlsafe(32)
     cors_origins: str = "http://localhost:3000,http://localhost:5173"
 
     # Database
-    database_url: str = "sqlite+aiosqlite:///./meetingmind.db"
+    database_url: str = f"sqlite+aiosqlite:///{BASE_DIR / 'meetingmind.db'}"
 
     # OpenAI
     openai_api_key: Optional[str] = None

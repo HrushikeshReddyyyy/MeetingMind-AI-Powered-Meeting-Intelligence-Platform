@@ -23,7 +23,7 @@ function Dashboard() {
       setRecentMeetings(meetingsData);
       setPendingItems(itemsData);
     } catch (err) {
-      console.error('Failed to load dashboard:', err);
+      console.error('Dashboard load error:', err);
     } finally {
       setLoading(false);
     }

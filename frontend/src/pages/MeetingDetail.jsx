@@ -1,27 +1,32 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import React, { useState, useEffect, useRef } from 'react';
+import { useParams, Link } from 'react-router-dom';
 import { getMeeting, uploadTranscript, processMeeting, updateActionItem } from '../api';
 
 function MeetingDetail() {
   const { id } = useParams();
-  const navigate = useNavigate();
   const [meeting, setMeeting] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [transcript, setTranscript] = useState('');
   const [uploading, setUploading] = useState(false);
   const [processing, setProcessing] = useState(false);
   const [activeTab, setActiveTab] = useState('summary');
+  const pollRef = useRef(null);
 
   useEffect(() => {
     loadMeeting();
+    return () => {
+      if (pollRef.current) clearInterval(pollRef.current);
+    };
   }, [id]);
 
   async function loadMeeting() {
     try {
+      setError(null);
       const data = await getMeeting(id);
       setMeeting(data);
     } catch (err) {
-      console.error('Failed to load meeting:', err);
+      setError('Failed to load meeting. Please check your connection and try again.');
     } finally {
       setLoading(false);
     }
@@ -33,7 +38,6 @@ function MeetingDetail() {
       setUploading(true);
       await uploadTranscript(id, transcript);
       setTranscript('');
-      // Poll for completion
       pollMeetingStatus();
     } catch (err) {
       alert('Failed to upload transcript: ' + err.message);
@@ -54,19 +58,21 @@ function MeetingDetail() {
     }
   }
 
-  async function pollMeetingStatus() {
-    // Poll every 2 seconds for up to 60 seconds
+  function pollMeetingStatus() {
+    if (pollRef.current) clearInterval(pollRef.current);
     let attempts = 0;
-    const interval = setInterval(async () => {
+    pollRef.current = setInterval(async () => {
       attempts++;
       try {
         const data = await getMeeting(id);
         setMeeting(data);
         if (data.status === 'completed' || data.status === 'failed' || attempts > 30) {
-          clearInterval(interval);
+          clearInterval(pollRef.current);
+          pollRef.current = null;
         }
       } catch {
-        clearInterval(interval);
+        clearInterval(pollRef.current);
+        pollRef.current = null;
       }
     }, 2000);
   }
@@ -77,12 +83,25 @@ function MeetingDetail() {
       await updateActionItem(itemId, { status: newStatus });
       loadMeeting();
     } catch (err) {
-      console.error('Failed to update action item:', err);
+      alert('Failed to update action item: ' + err.message);
     }
   }
 
   if (loading) {
     return <div className="loading"><div className="spinner" /> Loading meeting...</div>;
+  }
+
+  if (error) {
+    return (
+      <div className="empty-state">
+        <h3>Something went wrong</h3>
+        <p>{error}</p>
+        <div style={{ display: 'flex', gap: 8, justifyContent: 'center', marginTop: 12 }}>
+          <button className="btn btn-primary" onClick={() => { setLoading(true); loadMeeting(); }}>Retry</button>
+          <Link to="/meetings" className="btn btn-secondary">Back to Meetings</Link>
+        </div>
+      </div>
+    );
   }
 
   if (!meeting) {
@@ -93,6 +112,8 @@ function MeetingDetail() {
       </div>
     );
   }
+
+  const topicTags = meeting.analytics?.topic_tags || [];
 
   return (
     <div>
@@ -112,7 +133,7 @@ function MeetingDetail() {
           </p>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
-          {meeting.transcript && meeting.status !== 'completed' && (
+          {meeting.transcript && meeting.status !== 'completed' && meeting.status !== 'processing' && meeting.status !== 'transcribing' && (
             <button className="btn btn-primary" onClick={handleProcess} disabled={processing}>
               {processing ? 'Processing...' : 'Process Meeting'}
             </button>
@@ -134,7 +155,7 @@ function MeetingDetail() {
             className="form-textarea"
             value={transcript}
             onChange={e => setTranscript(e.target.value)}
-            placeholder="Paste your meeting transcript here...&#10;&#10;Example:&#10;John: Let's discuss the Q4 roadmap.&#10;Jane: I think we should prioritize the mobile app.&#10;Bob: Agreed. We need to finalize the design by next Friday."
+            placeholder={"Paste your meeting transcript here...\n\nExample:\nJohn: Let's discuss the Q4 roadmap.\nJane: I think we should prioritize the mobile app.\nBob: Agreed. We need to finalize the design by next Friday."}
             style={{ minHeight: 200 }}
           />
           <div style={{ marginTop: 12, display: 'flex', gap: 8 }}>
@@ -193,8 +214,8 @@ function MeetingDetail() {
                 <div className="detail-section">
                   <h3>Key Decisions</h3>
                   <ul className="decision-list">
-                    {meeting.key_decisions.map((decision, i) => (
-                      <li key={i}>{decision}</li>
+                    {meeting.key_decisions.map((decision) => (
+                      <li key={decision}>{decision}</li>
                     ))}
                   </ul>
                 </div>
@@ -282,12 +303,12 @@ function MeetingDetail() {
                   <div className="stat-sub">out of 100</div>
                 </div>
               </div>
-              {meeting.analytics.topic_tags && meeting.analytics.topic_tags.length > 0 && (
+              {topicTags.length > 0 && (
                 <div style={{ marginTop: 16 }}>
                   <h4 style={{ fontSize: 14, fontWeight: 600, marginBottom: 8 }}>Topics</h4>
                   <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                    {meeting.analytics.topic_tags.map((tag, i) => (
-                      <span key={i} className="badge badge-processing" style={{ padding: '4px 12px' }}>{tag}</span>
+                    {topicTags.map((tag) => (
+                      <span key={tag} className="badge badge-processing" style={{ padding: '4px 12px' }}>{tag}</span>
                     ))}
                   </div>
                 </div>
